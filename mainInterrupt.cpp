@@ -50,6 +50,7 @@ typedef struct list {
 /*Recently Added*/
 void readFile(list *fileBuffer, char *readLine);
 void saveFile(list *fileBuffer, char *fileName);
+void addChar(list *fileBuffer, int atLine, char c, int x);
 
 /* Global variables. */
 char keyBuffer[128];
@@ -345,7 +346,7 @@ void screenEdit(char *file)
 
 			/* Special keys, arrows, page up, etc. */
 			if (c == 224) {
-
+				 
 				c = _getch();
 			
 				switch (c)
@@ -387,6 +388,7 @@ void screenEdit(char *file)
 			else if (c == carraigeReturn) {
 				/* Place char in buffer. */
 				eScreen[cy][cx] = c;
+				addChar(&fileBuffer, cy, c, cx);
 
 				/* Handle cursor. */
 				if (cy < (nLines-1)) {
@@ -398,6 +400,7 @@ void screenEdit(char *file)
 			else if (c == backspace) {
 				/* Place char in buffer. */
 				eScreen[cy][cx] = ' ';
+				addChar(&fileBuffer, cy, ' ', cx);
 
 				/* Handle cursor. */
 				printf("%c", c);
@@ -413,6 +416,7 @@ void screenEdit(char *file)
 				if (cx >= 80) {
 					/* Load screen buffer. */
 					eScreen[cy][cx] = carraigeReturn;
+					addChar(&fileBuffer, cy, carraigeReturn, cx);
 					cx = 0;
 					cy++;
 					if (cy == 80){
@@ -423,6 +427,7 @@ void screenEdit(char *file)
 					/* Load screen buffer. */
 					for(j=cx;j<cx+4;j++) {
 						eScreen[cy][cx] = ' ';
+						addChar(&fileBuffer, cy, ' ', cx);
 					}
 		 		}
 				GotoXY(hStdout, cx, cy);
@@ -435,6 +440,7 @@ void screenEdit(char *file)
 
 				/* Put char into screen buffer. */
 				eScreen[cy][cx] = c;
+				addChar(&fileBuffer, cy, c, cx);
 
 				/* Handle position of cursor on screen. */
 				cx++;
@@ -596,6 +602,26 @@ void addLine(list *fileBuffer, int atLine, char *line) {
 		}
 	}
 	fileBuffer->lineNum = fileBuffer->lineNum + 1;
+}
+
+/*Problems with addChar: Does not consider backspaces/ change of lines while typing*/
+
+void addChar(list *fileBuffer, int atLine, char c, int x) {
+	node *i;
+	int counter = 1;
+	if (atLine == 0) {
+		fileBuffer->Head->content[x] = c;
+	}
+	else {
+		for (i = fileBuffer->Head; i != NULL; i = i->next) {
+			if (counter == atLine && sizeof(i->content) <= 80) {
+				//go to that character
+				//replace the character with c
+				i->content[x] = c;
+			}
+			counter++;
+		}
+	}
 }
 
 
