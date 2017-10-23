@@ -50,7 +50,9 @@ typedef struct list {
 /*Recently Added*/
 void readFile(list *fileBuffer, char *readLine);
 void saveFile(list *fileBuffer, char *fileName);
+void addLine(list *fileBuffer, int atLine, char *line);
 void addChar(list *fileBuffer, int atLine, char c, int x);
+void printBuffer(list *fileBuffer);
 
 /* Global variables. */
 char keyBuffer[128];
@@ -316,9 +318,10 @@ void screenEdit(char *file)
 	
 	//read an input line in till it is at the end of the file
 	in = fopen(file, "r");
-	if (in != NULL) {
+	if (in != NULL) {		
 		while (fgets(strTmp, MAX_CHAR, in)) {
-			readFile(&fileBuffer, strTmp);
+			readFile(&fileBuffer, strTmp)
+			printf(strTmp);
 			fileBuffer.lineNum = fileBuffer.lineNum + 1;
 		}
 		fclose(in);
@@ -388,7 +391,7 @@ void screenEdit(char *file)
 			else if (c == carraigeReturn) {
 				/* Place char in buffer. */
 				eScreen[cy][cx] = c;
-				addChar(&fileBuffer, cy, c, cx);
+				//addChar(&fileBuffer, cy, c, cx);
 
 				/* Handle cursor. */
 				if (cy < (nLines-1)) {
@@ -400,7 +403,7 @@ void screenEdit(char *file)
 			else if (c == backspace) {
 				/* Place char in buffer. */
 				eScreen[cy][cx] = ' ';
-				addChar(&fileBuffer, cy, ' ', cx);
+				//addChar(&fileBuffer, cy, ' ', cx);
 
 				/* Handle cursor. */
 				printf("%c", c);
@@ -416,7 +419,7 @@ void screenEdit(char *file)
 				if (cx >= 80) {
 					/* Load screen buffer. */
 					eScreen[cy][cx] = carraigeReturn;
-					addChar(&fileBuffer, cy, carraigeReturn, cx);
+					//addChar(&fileBuffer, cy, carraigeReturn, cx);
 					cx = 0;
 					cy++;
 					if (cy == 80){
@@ -427,7 +430,7 @@ void screenEdit(char *file)
 					/* Load screen buffer. */
 					for(j=cx;j<cx+4;j++) {
 						eScreen[cy][cx] = ' ';
-						addChar(&fileBuffer, cy, ' ', cx);
+						//addChar(&fileBuffer, cy, ' ', cx);
 					}
 		 		}
 				GotoXY(hStdout, cx, cy);
@@ -440,7 +443,7 @@ void screenEdit(char *file)
 
 				/* Put char into screen buffer. */
 				eScreen[cy][cx] = c;
-				addChar(&fileBuffer, cy, c, cx);
+				//addChar(&fileBuffer, cy, c, cx);
 
 				/* Handle position of cursor on screen. */
 				cx++;
@@ -476,9 +479,24 @@ void screenEdit(char *file)
 					}
 				}
 				fclose(out);*/
+				fileBuffer.Head = NULL;
+				fileBuffer.Tail = NULL;
+				fileBuffer.lineNum = 0;
+				printBuffer(&fileBuffer);
 				editing = false;
 
-				/* Print out a prompt. */
+				/* Clear screen. */
+		
+				for (j = 0; j<nLines; j++) {
+					for (k = 0; k<nCols; k++) {
+						putchar(' ');
+					}
+				}
+
+				/* Set cursor position. */
+				cx = 0;
+				cy = 0;
+				GotoXY(hStdout, cx, cy);
 				showPrompt();
 			}
 		} /* End if _kbhit() */
@@ -549,10 +567,7 @@ void readFile(list *fileBuffer,  char *readLine) {
 	}
 	else {
 		fileBuffer->Tail->next = newNode;
-		fileBuffer->Tail = fileBuffer->Tail->next;
-	}
-	for ( node* i = fileBuffer->Head; i != NULL; i = i->next) {
-		printf("%s", i->content);
+		fileBuffer->Tail = newNode;
 	}
 }
 
@@ -614,13 +629,30 @@ void addChar(list *fileBuffer, int atLine, char c, int x) {
 	}
 	else {
 		for (i = fileBuffer->Head; i != NULL; i = i->next) {
-			if (counter == atLine && sizeof(i->content) <= 80) {
-				//go to that character
-				//replace the character with c
-				i->content[x] = c;
+			if (counter == atLine) {
+				if (x <= 80) {
+					//go to that character
+					//replace the character with c
+					i->content[x] = c;
+				}
+				else {
+					char line[MAX_CHAR];
+					line[0] = c;
+					addLine(fileBuffer, atLine + 1, line);
+					fileBuffer->lineNum++;
+				}
 			}
 			counter++;
 		}
+	}
+}
+
+void printBuffer(list *fileBuffer) {
+	node*i;
+	i = fileBuffer->Head;
+	while (i!= null) {
+		printf(i->content);
+		i = i->next;
 	}
 }
 
