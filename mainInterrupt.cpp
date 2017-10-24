@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <conio.h>
 
+/*testing wes's code*/
 #define nFlags 32
 
 /* Define flag types. */
