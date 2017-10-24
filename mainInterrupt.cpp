@@ -320,7 +320,7 @@ void screenEdit(char *file)
 	in = fopen(file, "r");
 	if (in != NULL) {		
 		while (fgets(strTmp, MAX_CHAR, in)) {
-			readFile(&fileBuffer, strTmp)
+			readFile(&fileBuffer, strTmp);
 			printf(strTmp);
 			fileBuffer.lineNum = fileBuffer.lineNum + 1;
 		}
@@ -391,7 +391,7 @@ void screenEdit(char *file)
 			else if (c == carraigeReturn) {
 				/* Place char in buffer. */
 				eScreen[cy][cx] = c;
-				//addChar(&fileBuffer, cy, c, cx);
+				addChar(&fileBuffer, cy, c, cx);
 
 				/* Handle cursor. */
 				if (cy < (nLines-1)) {
@@ -403,7 +403,7 @@ void screenEdit(char *file)
 			else if (c == backspace) {
 				/* Place char in buffer. */
 				eScreen[cy][cx] = ' ';
-				//addChar(&fileBuffer, cy, ' ', cx);
+				addChar(&fileBuffer, cy, ' ', cx);
 
 				/* Handle cursor. */
 				printf("%c", c);
@@ -419,7 +419,7 @@ void screenEdit(char *file)
 				if (cx >= 80) {
 					/* Load screen buffer. */
 					eScreen[cy][cx] = carraigeReturn;
-					//addChar(&fileBuffer, cy, carraigeReturn, cx);
+					addChar(&fileBuffer, cy, carraigeReturn, cx);
 					cx = 0;
 					cy++;
 					if (cy == 80){
@@ -430,7 +430,7 @@ void screenEdit(char *file)
 					/* Load screen buffer. */
 					for(j=cx;j<cx+4;j++) {
 						eScreen[cy][cx] = ' ';
-						//addChar(&fileBuffer, cy, ' ', cx);
+						addChar(&fileBuffer, cy, ' ', cx);
 					}
 		 		}
 				GotoXY(hStdout, cx, cy);
@@ -443,12 +443,12 @@ void screenEdit(char *file)
 
 				/* Put char into screen buffer. */
 				eScreen[cy][cx] = c;
-				//addChar(&fileBuffer, cy, c, cx);
+				addChar(&fileBuffer, cy, c, cx);
 
 				/* Handle position of cursor on screen. */
 				cx++;
 
-				if (cx == 80) {
+				if (cx == MAX_CHAR) {
 					cx = 0;
 					cy++;
 					if (cy == 80){
@@ -623,24 +623,23 @@ void addLine(list *fileBuffer, int atLine, char *line) {
 
 void addChar(list *fileBuffer, int atLine, char c, int x) {
 	node *i;
-	int counter = 1;
-	if (atLine == 0) {
-		fileBuffer->Head->content[x] = c;
+	node *newNode;
+	int counter = 0;
+
+	newNode = (node *)malloc(sizeof(node));
+	newNode->content[0] = c;
+	newNode->next = NULL;
+
+	if (fileBuffer->Head == NULL) {
+		fileBuffer->Head = newNode;
+		fileBuffer->Tail = newNode;
 	}
 	else {
 		for (i = fileBuffer->Head; i != NULL; i = i->next) {
 			if (counter == atLine) {
-				if (x <= 80) {
-					//go to that character
-					//replace the character with c
-					i->content[x] = c;
-				}
-				else {
-					char line[MAX_CHAR];
-					line[0] = c;
-					addLine(fileBuffer, atLine + 1, line);
-					fileBuffer->lineNum++;
-				}
+				//go to that character
+				//replace the character with c
+				i->content[x] = c;
 			}
 			counter++;
 		}
