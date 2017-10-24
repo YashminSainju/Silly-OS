@@ -475,21 +475,6 @@ void screenEdit(char *file)
 			}
 			/* Exit editor. */
 			else if (c == 24){
-				/*out = fopen(file, "w");
-				for(j=0;j<nLines;j++) {
-					eScreen[j][nCols - 2] = carraigeReturn;
-					eScreen[j][nCols - 1] = lineFeed;
-					for(k=0;k<nCols;k++) {
-						c = eScreen[j][k];
-						if ((c == carraigeReturn)||(c == lineFeed)) {
-							fprintf(out, "%c", c);
-							k = nCols;
-						}
-						else {
-							fprintf(out, "%c", c);
-						}
-					}
-				}
 				fclose(out);*/
 				fileBuffer.Head = NULL;
 				fileBuffer.Tail = NULL;
@@ -652,6 +637,9 @@ void addChar(list *fileBuffer, int atLine, char c, int x) {
 				//go to that character
 				//replace the character with c
 				i->content[x] = c;
+				if (i->content[x + 1] < ' ' || i->content[x+1] > '}') {
+					i->content[x + 1] = '\0';
+				}
 			}
 			counter++;
 		}
@@ -666,53 +654,4 @@ void printBuffer(list *fileBuffer) {
 		i = i->next;
 	}
 }
-
-
-#if 0
-
-void writeOutEditorFile(char *fName, char *buffer, int numRows, int numCols)
-{
-	int j, k;
-	int lastRow, lastCol;
-	int index;
-	bool searching = true;
-
-
-	/* Find last character of the last line of the input buff. */
-	lastRow = numRows - 1;
-	lastCol = numCols - 1;
-
-	while(searching) {
-		index = (lastRow*numCols) + lastCol;
-		if (buffer[index] != ' ') {
-			searching = false;
-		}
-		else if (lastRow < 0) || (lastCol < 0) {
-			searching = false;
-		}
-	}
-
-	/* Start writing out file, but only write until lastRow. */
-	index = 79;
-	for(j=0;j<lastRow;j++) {
-		/* Find the last character of the line. */
-		lastChar = findLastChar(buffer[index]);
-		for(k=0;k<lastChar;k++) {
-			printf("%c", buffer[k+index]);
-		}
-		index=index+80;
-	}
-	
-}
-
-
-int findLastChar(char *buffer)
-{
-	int j;
-
-	while(j>=0) {
-		if 
-
-
-#endif
 		
