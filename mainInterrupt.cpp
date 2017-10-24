@@ -475,7 +475,6 @@ void screenEdit(char *file)
 			}
 			/* Exit editor. */
 			else if (c == 24){
-				fclose(out);*/
 				fileBuffer.Head = NULL;
 				fileBuffer.Tail = NULL;
 				fileBuffer.lineNum = 0;
