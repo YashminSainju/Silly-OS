@@ -376,13 +376,25 @@ void screenEdit(char *file)
 
 					/* Page Up, Page Down, Home, End, Insert, Delete */
 					/* 73		81			71	 79	  82	  83 */
-					case 73:
-					case 81:
-					case 71:
-					case 79:
-					case 82:
-					case 83:
-						break;
+				case 73:
+					/* Code for Page Up */
+					if (cy =  0) cx++;
+					break;
+				case 81:
+					/* code for Page Down*/
+					if (cy = (nLines - 1)) cy++;
+					break;
+					
+				case 71:
+				case 79:
+					/* codes to bring cursor at the end of the line*/
+					
+					
+				case 82:
+					/* Insert the letter in place of replacing them*/
+				case 83:
+					/*deleting by letters*/
+					break;
 
 					/* ... etc ... */
 				}
