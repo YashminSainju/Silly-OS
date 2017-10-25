@@ -172,9 +172,11 @@ void actionHistory(list * weezyBuffer, char * actionEntry) {
 	}
 	// If this is not the first node then we need to set the lists tail equal to the 
 	else {
+		newNode->previous = weezyBuffer->Tail;
 		weezyBuffer->Tail->next = newNode;
 		weezyBuffer->Tail = newNode;
 		weezyBuffer->Tail->next = weezyBuffer->Head;
+		weezyBuffer->Head->previous = weezyBuffer->Tail;
 		x = 2;
 		printf("%d", x);
 		
