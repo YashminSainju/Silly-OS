@@ -14,6 +14,7 @@
 #define lineFeed 10
 #define carraigeReturn 13
 #define esc 27
+#define upArrow 72
 
 /* Define screen attributes. */
 #define nLines 24
@@ -33,12 +34,13 @@ void screenEdit(char *file);
 bool showFile(char *file);
 void showPrompt(void);
 
-void GotoXY( HANDLE StdOut, SHORT x, SHORT y );
+void GotoXY(HANDLE StdOut, SHORT x, SHORT y);
 
 typedef struct node {
 	char content[MAX_CHAR];
 	int val;
 	node *next;
+	node *previous;
 }node;
 
 typedef struct list {
@@ -53,12 +55,14 @@ void saveFile(list *fileBuffer, char *fileName);
 void addLine(list *fileBuffer, int atLine, char *line);
 void addChar(list *fileBuffer, int atLine, char c, int x);
 void printBuffer(list *fileBuffer);
+void actionHistory(list * weezyBuffer, char * actionEntry);
 
 /* Global variables. */
 char keyBuffer[128];
 list fileBuffer;
 char strTmp[MAX_CHAR];
 bool flags[nFlags];
+list weezyBuffer;
 
 void main(void)
 {
@@ -66,7 +70,7 @@ void main(void)
 
 	printf("Hello TV Land! \n");
 	printf(">");
-	
+
 	/* Boot Strap. */
 	bootStrap();
 
@@ -75,7 +79,7 @@ void main(void)
 
 	/* Interrupt Loop. */
 	running = true;
-	while(running) {
+	while (running) {
 		/* Handle interrupts. */
 		if (_kbhit()) {
 			/* Call keyboard handler routine. */
@@ -89,22 +93,27 @@ void main(void)
 			/* Send string to monitor process. */
 			monitorMe(keyBuffer);
 		}
-	
+
 		Sleep(25);
 	}
 }
 
 
-void keyboardMe(void)
-{
+void keyboardMe(void)  {
 	char c;
 	static int buffPtr = 0;
+
+	/*weezyBuffer.Head = NULL;
+	weezyBuffer.Tail = NULL;
+	weezyBuffer.lineNum = 0;
+	*/
 
 	/* Get the key. */
 	c = _getch();
 
 	/* If user hits return key, flag monitor prompt. */
 	if (c == carraigeReturn) {
+		actionHistory(&weezyBuffer, keyBuffer);
 		showPrompt();
 
 		keyBuffer[buffPtr] = null;
@@ -112,6 +121,14 @@ void keyboardMe(void)
 
 		flags[monitorPrompt] = true;
 	}
+
+	/*Here i will add code to traverse my newly and sexy list containing previous entries.*/
+	/*else if (c == upArrow) {
+
+
+	}
+	*/
+
 	else if (c == backspace) {
 		printf("%c", c);
 		printf(" ");
@@ -127,17 +144,53 @@ void keyboardMe(void)
 			keyBuffer[buffPtr] = c;
 			buffPtr++;
 		}
-		
+
 	}
 }
 
+void actionHistory(list * weezyBuffer, char * actionEntry) {
+	int x = 0;
+	//THE LIST IS EMPTY
+	//so I 
+	//created a new UNLINKED node.	
+	node *newNode;
+	newNode = (node *)malloc(sizeof(node));
+	// populated content with the Command Line Entry. 
+	strcpy(newNode->content, actionEntry);
+	
+	// if new node is the 1st node of the list 
+	if (weezyBuffer->Head == NULL) {
+		// Add new node to the list. Setting both the head and the tail of the list equal to the new node.
+		weezyBuffer->Head = newNode;
+		weezyBuffer->Tail = newNode;
+		weezyBuffer->Tail->next = weezyBuffer->Head;
+		//weezyBuffer->Tail->previous = weezyBuffer ->Head;
+
+		x = 1;
+		printf("%d",x);
+		
+	}
+	// If this is not the first node then we need to set the lists tail equal to the 
+	else {
+		weezyBuffer->Tail->next = newNode;
+		weezyBuffer->Tail = newNode;
+		weezyBuffer->Tail->next = weezyBuffer->Head;
+		x = 2;
+		printf("%d", x);
+		
+		
+		
+
+	}
+
+}
 
 void bootStrap(void)
 {
 	int j;
 
 	/* Clear all flags. */
-	for(j=0;j<nFlags;j++) {
+	for (j = 0; j<nFlags; j++) {
 		flags[j] = false;
 	}
 
@@ -214,7 +267,7 @@ int monitorMe(char *commandLine)
 	/* Set Jobs directory. */
 
 	/* Run 1 job. */
-	/* 
+	/*
 	Create the process.
 	Load it to memory
 	Put pcb into readyQ
@@ -223,54 +276,54 @@ int monitorMe(char *commandLine)
 	*/
 
 	/* Run multiple jobs from directory. */
-	/* 
+	/*
 	As memory is available:
-		Create the process.
-		Load it to memory
-		Put pcb into readyQ
-		Let scheduler take over the running of job.
-		When complete, release any resources.
+	Create the process.
+	Load it to memory
+	Put pcb into readyQ
+	Let scheduler take over the running of job.
+	When complete, release any resources.
 
 	Keep loading jobs until user memory is full.
 
 	If memory is full, the job load process must wait until jobs
 	complete befor loading another job.
 
-    Keep doing this until all jobs in the directory have been completed. 
+	Keep doing this until all jobs in the directory have been completed.
 
-    */
+	*/
 
 	return status;
 }
 
 
 
-/* 
-Here is a good start on an editor. 
+/*
+Here is a good start on an editor.
 
 
-  It needs the following at a minimum:
+It needs the following at a minimum:
 
 
-  It needs to read in an input file, if it exists.
-  It needs a "save as" function.
+It needs to read in an input file, if it exists.
+It needs a "save as" function.
 
-  It needs to handle tabs correctly.
+It needs to handle tabs correctly.
 
-  backspace does not work quite right at the end of a line.
+backspace does not work quite right at the end of a line.
 
-  Right now the way you exit the editor is with the '~' key.  That 
-  needs to change.  I think ctrl 's' should save, ctrl 'x' should exit.
+Right now the way you exit the editor is with the '~' key.  That
+needs to change.  I think ctrl 's' should save, ctrl 'x' should exit.
 
-  Scrolling is not implemented, it needs to do that.
+Scrolling is not implemented, it needs to do that.
 
-  Inserting lines between lines is not implemented, nor is deleting of lines.
-  It should probably do that to.
+Inserting lines between lines is not implemented, nor is deleting of lines.
+It should probably do that to.
 
-  Coloring of key programming words would be awesome, check the curseMain.cpp
-  program for examples of how to do that stuff. 
+Coloring of key programming words would be awesome, check the curseMain.cpp
+program for examples of how to do that stuff.
 
-  etc.
+etc.
 
 
 */
@@ -290,14 +343,14 @@ void screenEdit(char *file)
 	unsigned char c;
 
 	/* File input and output. */
-	FILE  *in ,  *out;
+	FILE  *in, *out;
 
 	/* Get a handle for the standard output so we can control the cursor. */
-	hStdout = GetStdHandle( STD_OUTPUT_HANDLE );
+	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	/* Clear screen buffer. */
-	for(j=0;j<75;j++) {
-		for(k=0;k<80;k++) {
+	for (j = 0; j<75; j++) {
+		for (k = 0; k<80; k++) {
 			eScreen[j][k] = ' ';
 		}
 	}
@@ -315,10 +368,10 @@ void screenEdit(char *file)
 
 
 	/* Here we would load the screen from the file, if the file exists. */
-	
+
 	//read an input line in till it is at the end of the file
 	in = fopen(file, "r");
-	if (in != NULL) {		
+	if (in != NULL) {
 		while (fgets(strTmp, MAX_CHAR, in)) {
 			readFile(&fileBuffer, strTmp);
 			printf(strTmp);
@@ -328,8 +381,8 @@ void screenEdit(char *file)
 	}
 	else {
 		/* Display data from array to screen, place cursor upper left. */
-		for(j=0;j<nLines;j++) {
-			for(k=0;k<nCols;k++) {
+		for (j = 0; j<nLines; j++) {
+			for (k = 0; k<nCols; k++) {
 				putchar(eScreen[j][k]);
 			}
 		}
@@ -341,7 +394,7 @@ void screenEdit(char *file)
 	cx = 0;
 	cy = 0;
 	GotoXY(hStdout, cx, cy);
-	while(editing) {
+	while (editing) {
 		/* Edit functions. */
 		if (_kbhit()) {
 			/* Get the key. */
@@ -349,47 +402,47 @@ void screenEdit(char *file)
 
 			/* Special keys, arrows, page up, etc. */
 			if (c == 224) {
-				 
+
 				c = _getch();
-			
-				switch (c)
+
+				switch (c)       
 				{
 					/* Arrow keys. */
-					case 72:
-						/* Code for up arrow handling */
-						if (cy > 0) cy--;
-						break;
+				case 72:
+					/* Code for up arrow handling */
+					if (cy > 0) cy--;
+					break;
 
-					case 80:
-						/* Code for down arrow handling */
-						if (cy < (nLines-1)) cy++;
-						break;
+				case 80:
+					/* Code for down arrow handling */
+					if (cy < (nLines - 1)) cy++;
+					break;
 
-					case 75:
-						/* Code for left arrow handling */
-						if (cx > 0) cx--;
-						break;
-					case 77:
-						/* Code for right arrow handling */
-						if (cx < (nCols-1)) cx++;
-						break;
+				case 75:
+					/* Code for left arrow handling */
+					if (cx > 0) cx--;
+					break;
+				case 77:
+					/* Code for right arrow handling */
+					if (cx < (nCols - 1)) cx++;
+					break;
 
 					/* Page Up, Page Down, Home, End, Insert, Delete */
 					/* 73		81			71	 79	  82	  83 */
 				case 73:
 					/* Code for Page Up */
-					if (cy =  0) cx++;
+					if (cy = 0) cx++;
 					break;
 				case 81:
 					/* code for Page Down*/
 					if (cy = (nLines - 1)) cy++;
 					break;
-					
+
 				case 71:
 				case 79:
 					/* codes to bring cursor at the end of the line*/
-					
-					
+
+
 				case 82:
 					/* Insert the letter in place of replacing them*/
 				case 83:
@@ -406,7 +459,7 @@ void screenEdit(char *file)
 				addChar(&fileBuffer, cy, c, cx);
 
 				/* Handle cursor. */
-				if (cy < (nLines-1)) {
+				if (cy < (nLines - 1)) {
 					cy++;
 				}
 				cx = 0;
@@ -434,19 +487,19 @@ void screenEdit(char *file)
 					addChar(&fileBuffer, cy, carraigeReturn, cx);
 					cx = 0;
 					cy++;
-					if (cy == 80){
+					if (cy == 80) {
 						cy = 79;
 					}
 				}
 				else {
 					/* Load screen buffer. */
-					for(j=cx;j<cx+4;j++) {
+					for (j = cx; j<cx + 4; j++) {
 						eScreen[cy][cx] = ' ';
 						addChar(&fileBuffer, cy, ' ', cx);
 					}
-		 		}
+				}
 				GotoXY(hStdout, cx, cy);
-				
+
 			}
 			/* Common printed characters. */
 			else if ((c >= ' ') && (c <= '}')) {
@@ -463,7 +516,7 @@ void screenEdit(char *file)
 				if (cx == MAX_CHAR) {
 					cx = 0;
 					cy++;
-					if (cy == 80){
+					if (cy == 80) {
 						cy = 79;
 					}
 				}
@@ -474,8 +527,7 @@ void screenEdit(char *file)
 				printf("file Saved");
 			}
 			/* Exit editor. */
-			else if (c == 24){
-				fclose(out);*/
+			else if (c == 24) {
 				fileBuffer.Head = NULL;
 				fileBuffer.Tail = NULL;
 				fileBuffer.lineNum = 0;
@@ -483,7 +535,7 @@ void screenEdit(char *file)
 				editing = false;
 
 				/* Clear screen. */
-		
+
 				for (j = 0; j<nLines; j++) {
 					for (k = 0; k<nCols; k++) {
 						putchar(' ');
@@ -498,7 +550,7 @@ void screenEdit(char *file)
 			}
 		} /* End if _kbhit() */
 
-		/* Service system interrupts. */
+		  /* Service system interrupts. */
 		else {
 
 		}
@@ -506,18 +558,18 @@ void screenEdit(char *file)
 		Sleep(50);
 	} /* End while editing. */
 
-	/* If needed, save contents. */
+	  /* If needed, save contents. */
 }
 
 
 /* Set current cursor position. */
-void GotoXY( HANDLE StdOut, SHORT x, SHORT y )
+void GotoXY(HANDLE StdOut, SHORT x, SHORT y)
 {
-    // Set the cursor position.
-    COORD Cord;
-    Cord.X = x;
-    Cord.Y = y;
-    SetConsoleCursorPosition( StdOut, Cord );
+	// Set the cursor position.
+	COORD Cord;
+	Cord.X = x;
+	Cord.Y = y;
+	SetConsoleCursorPosition(StdOut, Cord);
 }
 
 
@@ -534,7 +586,7 @@ bool showFile(char *fName)
 	else {
 		printf("\n...%s...\n", fName);
 		printf("\n");
-		while(fgets(line, 80, myFile) != null) {
+		while (fgets(line, 80, myFile) != null) {
 			puts(line);
 		}
 	}
@@ -552,16 +604,17 @@ void showPrompt(void)
 
 
 /* Read files and add lines through file buffer*/
-void readFile(list *fileBuffer,  char *readLine) {
+void readFile(list *fileBuffer, char *readLine) {
 	node *newNode;
 	newNode = (node *)malloc(sizeof(node));
 	strcpy(newNode->content, readLine);
 	newNode->next = NULL;
-
+	// if 1st node
 	if (fileBuffer->Head == NULL) {
 		fileBuffer->Head = newNode;
 		fileBuffer->Tail = newNode;
 	}
+	// if not 1st
 	else {
 		fileBuffer->Tail->next = newNode;
 		fileBuffer->Tail = newNode;
@@ -573,7 +626,8 @@ void saveFile(list *fileBuffer, char *fileName) {
 	in = fopen(fileName, "w");
 	if (in == NULL) {
 		printf("Cannot find file with the filename.");
-	}else {
+	}
+	else {
 		node *i;
 		for (i = fileBuffer->Head; i != NULL; i = i->next) {
 			fprintf(in, "%s", i->content);
@@ -600,7 +654,7 @@ void addLine(list *fileBuffer, int atLine, char *line) {
 		newNode->next = fileBuffer->Head;
 		fileBuffer->Head = newNode;
 	}
-	else{
+	else {
 		for (i = fileBuffer->Head; i != NULL; i = i->next) {
 			if (counter == atLine) {
 				newNode->next = i->next;
@@ -637,7 +691,7 @@ void addChar(list *fileBuffer, int atLine, char c, int x) {
 				//go to that character
 				//replace the character with c
 				i->content[x] = c;
-				if (i->content[x + 1] < ' ' || i->content[x+1] > '}') {
+				if (i->content[x + 1] < ' ' || i->content[x + 1] > '}') {
 					i->content[x + 1] = '\0';
 				}
 			}
@@ -649,9 +703,9 @@ void addChar(list *fileBuffer, int atLine, char c, int x) {
 void printBuffer(list *fileBuffer) {
 	node*i;
 	i = fileBuffer->Head;
-	while (i!= null) {
+	while (i != null) {
 		printf(i->content);
 		i = i->next;
 	}
 }
-		
+
