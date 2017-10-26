@@ -23,13 +23,16 @@
 /*Define max characters for buffer*/
 #define MAX_CHAR 81
 
+/* Tracker for up hits. Is to be set to 0 each time enter key is hit, while being incremented whenever up arrow is hit.*/
+
+
 /* Functions called. */
 void bootStrap(void);
 void bootMe(char *initfile);
 
 void keyboardMe(void);
 void screenMessage(char *screenString);
-int monitorMe(char *commandLine);
+int  monitorMe(char *commandLine);
 void screenEdit(char *file);
 bool showFile(char *file);
 void showPrompt(void);
@@ -50,12 +53,15 @@ typedef struct list {
 }list;
 
 /*Recently Added*/
+bool isEmpty(list * buffer);
+void printBuffer(list *fileBuffer);
 void readFile(list *fileBuffer, char *readLine);
 void saveFile(list *fileBuffer, char *fileName);
 void addLine(list *fileBuffer, int atLine, char *line);
 void addChar(list *fileBuffer, int atLine, char c, int x);
-void printBuffer(list *fileBuffer);
 void actionHistory(list * weezyBuffer, char * actionEntry);
+void keyboardMeCopyHelper(char * keyBuffer, list * weezyBuffer);
+void upLineSelection(char * keyBuffer, list * weezyBuffer);
 
 /* Global variables. */
 char keyBuffer[128];
@@ -63,6 +69,7 @@ list fileBuffer;
 char strTmp[MAX_CHAR];
 bool flags[nFlags];
 list weezyBuffer;
+int upHitsCounter;
 
 void main(void)
 {
@@ -102,17 +109,14 @@ void main(void)
 void keyboardMe(void)  {
 	char c;
 	static int buffPtr = 0;
-
-	/*weezyBuffer.Head = NULL;
-	weezyBuffer.Tail = NULL;
-	weezyBuffer.lineNum = 0;
-	*/
+	int upHitsCounter = 0;
 
 	/* Get the key. */
 	c = _getch();
 
 	/* If user hits return key, flag monitor prompt. */
 	if (c == carraigeReturn) {
+		upHitsCounter =  0;
 		actionHistory(&weezyBuffer, keyBuffer);
 		showPrompt();
 
@@ -123,11 +127,12 @@ void keyboardMe(void)  {
 	}
 
 	/*Here i will add code to traverse my newly and sexy list containing previous entries.*/
-	/*else if (c == upArrow) {
-
-
+	else if (c == upArrow && !isEmpty(&weezyBuffer)) {	
+		upHitsCounter++ ;
+		upLineSelection(keyBuffer, &weezyBuffer);
+		printf("%s", keyBuffer);
 	}
-	*/
+	//keyboardMeCopyHelper(keyBuffer, &weezyBuffer);
 
 	else if (c == backspace) {
 		printf("%c", c);
@@ -148,15 +153,45 @@ void keyboardMe(void)  {
 	}
 }
 
-void actionHistory(list * weezyBuffer, char * actionEntry) {
-	int x = 0;
+bool isEmpty(list * buffer) {
+	if (buffer->Head == NULL) {
+		return true;
+	}
+	return false;
+}
+
+void upLineSelection(char * keyBuffer, list * weezyBuffer) {
+	node *newNode;
+	newNode = (node *)malloc(sizeof(node));
+	
+	if (upHitsCounter == 1) {
+		strcpy(keyBuffer, weezyBuffer->Tail->content);
+	}
+	else if (upHitsCounter > 1) {
+		newNode = weezyBuffer->Tail;
+		for (int i = 0; i < upHitsCounter; i++) {
+			newNode = newNode->previous;
+			strcpy(keyBuffer, newNode->content);
+		}
+
+	}
+
+
+
+}
+
+void keyboardMeCopyHelper(char * keyBuffer, list * weezyBuffer) {
+	strcpy(keyBuffer, weezyBuffer->Tail->content);
+}
+
+void actionHistory(list * weezyBuffer, char * keyBuffer) {
 	//THE LIST IS EMPTY
 	//so I 
 	//created a new UNLINKED node.	
 	node *newNode;
 	newNode = (node *)malloc(sizeof(node));
 	// populated content with the Command Line Entry. 
-	strcpy(newNode->content, actionEntry);
+	strcpy(newNode->content, keyBuffer);
 	
 	// if new node is the 1st node of the list 
 	if (weezyBuffer->Head == NULL) {
@@ -164,11 +199,7 @@ void actionHistory(list * weezyBuffer, char * actionEntry) {
 		weezyBuffer->Head = newNode;
 		weezyBuffer->Tail = newNode;
 		weezyBuffer->Tail->next = weezyBuffer->Head;
-		//weezyBuffer->Tail->previous = weezyBuffer ->Head;
-
-		x = 1;
-		printf("%d",x);
-		
+		weezyBuffer->Head->previous = weezyBuffer->Tail;
 	}
 	// If this is not the first node then we need to set the lists tail equal to the 
 	else {
@@ -177,12 +208,6 @@ void actionHistory(list * weezyBuffer, char * actionEntry) {
 		weezyBuffer->Tail = newNode;
 		weezyBuffer->Tail->next = weezyBuffer->Head;
 		weezyBuffer->Head->previous = weezyBuffer->Tail;
-		x = 2;
-		printf("%d", x);
-		
-		
-		
-
 	}
 
 }
